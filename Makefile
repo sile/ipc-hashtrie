@@ -13,7 +13,7 @@ CFLAGS=-Wall -O2 -g
 LINK=
 INCLUDE=-Iinclude
 
-all: bin bin/hashtrie
+all: bin bin/hashtrie bin/hashmap
 
 -include $(DEPS)
 
@@ -21,6 +21,9 @@ bin:
 	mkdir -p bin
 
 bin/hashtrie: src/bin/hashtrie.cc $(OBJS)
+	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
+
+bin/hashmap: src/bin/hashmap.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 %.o : %.cc
