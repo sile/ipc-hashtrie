@@ -21,6 +21,12 @@ int main(int argc, char** argv) {
   trie.store("a", "b");
   trie.store("key", "value2");
 
+  for(int i=0; i < 20; i++) {
+    char key[] = "a";
+    key[0] = key[0] + i;
+    trie.store(key, key);
+  }
+
   std::cout << "size: " << trie.size() << std::endl;
 
   iht::View view(trie);
@@ -30,6 +36,7 @@ int main(int argc, char** argv) {
             << "  key2: " << toStr(view.find("key2")) << std::endl
             << "  a: " << toStr(view.find("a")) << std::endl
             << "  1: " << toStr(view.find("1")) << std::endl
+            << "  d: " << toStr(view.find("d")) << std::endl
             << std::endl;
 
   return 0;

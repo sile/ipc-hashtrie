@@ -66,19 +66,19 @@ namespace iht {
       }
 
       void store(const String & key, const String & value) {
-        md_t old;
+        //md_t old;
         for(;;) {
           Ref<RootNode> root(h_->root, alc_);
           if(! root) {
             continue;
           }
           
-          old = h_->root;
-          h_->root = root.ptr()->store(key, value, alc_);
+          //old = h_->root;
+          h_->root = RootNode::store(root.md(), key, value, alc_);
           assert(h_->root != 0);
           break;
         }
-        RootNode::releaseNode(old, alc_);
+        //RootNode::releaseNode(old, alc_);
       }
       
       md_t dupRoot() {

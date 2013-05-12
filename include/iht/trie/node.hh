@@ -155,6 +155,50 @@ namespace iht {
         }
       }
 
+      md_t resize(Alc & alc, uint32_t depth, uint32_t next_depth) const {
+        md_t md = alc.allocate(sizeof(Node));
+        assert(md != 0);
+        
+        Node * sub = alc.ptr<Node>(md);
+
+        if(depth == 0) {
+          for(uint32_t i=0; i < 16; i++) {
+            sub->nodes_[i] = relocateEntries(alc, getList(alc, i), next_depth);
+          }
+        } else {
+          for(uint32_t i=0; i < 16; i++) {
+            sub->nodes_[i] = getSubNode(alc, i)->resize(alc, depth-1, next_depth);
+          }
+        }
+        
+        return md;
+      }
+
+      md_t relocateEntries(Alc & alc, md_t list, uint32_t next_depth) const {
+        md_t md = alc.allocate(sizeof(Node));
+        assert(md != 0);
+        
+        Node * node = alc.ptr<Node>(md);
+        node->init(alc);
+        
+        relocateEntriesImpl(alc, *node, list, next_depth);
+        
+        return md;
+      }
+
+      void relocateEntriesImpl(Alc & alc, Node & node, md_t list, uint32_t next_depth) const {
+        if(list == 0) {
+          return;
+        }
+        
+        const Cons * c = alc.ptr<Cons>(list);
+
+        uint32_t idx = nthIndex(c->key().hash(), next_depth);
+        node.nodes_[idx] = Cons::cons(alc, c->key(), c->value(), node.nodes_[idx]);
+        
+        relocateEntriesImpl(alc, node, c->cdr(), next_depth);
+      }
+
       md_t getList(const Alc & alc, uint32_t index) const {
         return nodes_[index];
       }
@@ -185,6 +229,10 @@ namespace iht {
         return md;
       }
       
+      static uint32_t nthIndex(uint32_t hash, uint32_t n) {
+        return index(hash >> (4*n));
+      }
+
       static uint32_t index(uint32_t hash) {
         return hash & 15;
       }
@@ -204,7 +252,8 @@ namespace iht {
     public:
       RootNode(allocator::FixedAllocator & alc)
         : count_(0),
-          next_resize_trigger_(16 * 4),
+          // TODO: next_resize_trigger_(16 * 4),
+          next_resize_trigger_(16),
           root_depth_(0),
           root_(alc.allocate(sizeof(Node)))
       {
@@ -236,11 +285,42 @@ namespace iht {
         }
       }
 
-      md_t store(const String & key, const String & value, Alc & alc) {
-        if(count_ >= next_resize_trigger_) {
-          // TODO:
+      static md_t store(md_t root, const String & key, const String & value, Alc & alc) {
+        RootNode * node = alc.ptr<RootNode>(root);
+        if(node->count_ >= node->next_resize_trigger_) {
+          std::cout << "# " << node->count_ << ", " << node->next_resize_trigger_ << std::endl;
+          md_t new_root = node->resize(alc);
+          assert(new_root != 0);
+
+          RootNode::releaseNode(root, alc);
+          return store(new_root, key, value, alc);
+        } else {
+          md_t new_root = node->store(key, value, alc);
+          assert(new_root != 0);
+          
+          RootNode::releaseNode(root, alc);
+          return new_root;
         }
+      }
+
+      String find(const String & key, const Alc & alc) const {
+        return alc.ptr<Node>(root_)->find(key, key.hash(), root_depth_, alc);
+      }
+      
+      md_t resize(Alc & alc) {
+        md_t new_root_node = alc.ptr<Node>(root_)->resize(alc, root_depth_, root_depth_+1);
+        assert(new_root_node != 0);
+
+        md_t new_root = alc.allocate(sizeof(RootNode));
+        assert(new_root != 0);
+
+        new (alc.ptr<RootNode>(new_root)) RootNode(count_, next_resize_trigger_*16, root_depth_+1, new_root_node);
         
+        return new_root;
+      }
+      
+    private:
+      md_t store(const String & key, const String & value, Alc & alc) {
         bool new_key;
         md_t new_node = alc.ptr<Node>(root_)->store(key, value, key.hash(), root_depth_, new_key, alc);
         assert(new_node != 0);
@@ -251,13 +331,7 @@ namespace iht {
         uint32_t new_count = (new_key ? count_+1 : count_);
         new (alc.ptr<RootNode>(new_root)) RootNode(new_count, next_resize_trigger_, root_depth_, new_node);
         
-        // NOTE: 呼び出し元で解放している: release(alc);
-        
         return new_root;
-      }
-
-      String find(const String & key, const Alc & alc) const {
-        return alc.ptr<Node>(root_)->find(key, key.hash(), root_depth_, alc);
       }
 
     private:
