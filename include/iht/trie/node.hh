@@ -143,12 +143,6 @@ private:
       }
 
       void release(Alc & alc, uint32_t depth) {
-        /*
-        for(int i=0; i < 16; i++) {
-          std::cerr << "[" << i << "] " << nodes_[i] << std::endl;
-        }
-        */
-
         for(int i=0; i < 16; i++) {
           if(nodes_[i] == 0) {
             continue;
@@ -361,7 +355,7 @@ private:
 
         uint32_t new_count = (new_key ? count_+1 : count_);
         new (alc.ptr<RootNode>(new_root)) RootNode(new_count, next_resize_trigger_, root_depth_, new_node);
-        
+
         return new_root;
       }
 

@@ -10,10 +10,10 @@ OBJS_NO_MAIN=$(SRCS_NO_MAIN:%.cc=%.o)
 CXX=g++
 CFLAGS=-Wall -O2 -g
 #CFLAGS=-Wall -g
-LINK=
+LINK=-lpthread
 INCLUDE=-Iinclude
 
-all: bin bin/hashtrie bin/hashmap
+all: bin bin/hashtrie bin/hashmap bin/mt-mutex
 
 -include $(DEPS)
 
@@ -24,6 +24,9 @@ bin/hashtrie: src/bin/hashtrie.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 bin/hashmap: src/bin/hashmap.cc $(OBJS)
+	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
+
+bin/mt-mutex: src/bin/mt-mutex.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 %.o : %.cc

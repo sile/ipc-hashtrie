@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   }
 
   std::vector<std::string> keys;
-  gen_keys(keys, 500000);
+  gen_keys(keys, 50000);
   
   NanoTimer store_time;
   for(unsigned i=0; i < keys.size(); i++) {
