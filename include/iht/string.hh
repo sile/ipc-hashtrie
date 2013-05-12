@@ -42,7 +42,7 @@ namespace iht {
     
     uint32_t hash() const {
       uint32_t h = GOLDEN_RATIO_PRIME;
-      for(const char* c=beg_; c != end_; c++)
+      for(const char* c=beg_; c < end_; c++)
         h = (h*33) + *c;
       return h;
     }

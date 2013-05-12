@@ -8,12 +8,12 @@ SRCS_NO_MAIN=$(shell find src -name "*.cc" | grep -v 'src/bin')
 OBJS_NO_MAIN=$(SRCS_NO_MAIN:%.cc=%.o)
 
 CXX=g++
-CFLAGS=-Wall -O2 -g
-#CFLAGS=-Wall -g
+#CFLAGS=-Wall -O2 -g
+CFLAGS=-Wall -g
 LINK=-lpthread
 INCLUDE=-Iinclude
 
-all: bin bin/hashtrie bin/hashmap bin/mt-mutex bin/mt-rwlock
+all: bin bin/hashtrie bin/hashmap bin/mt-mutex bin/mt-rwlock bin/mt-func
 
 -include $(DEPS)
 
@@ -30,6 +30,9 @@ bin/mt-mutex: src/bin/mt-mutex.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 bin/mt-rwlock: src/bin/mt-rwlock.cc $(OBJS)
+	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
+
+bin/mt-func: src/bin/mt-func.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 %.o : %.cc
