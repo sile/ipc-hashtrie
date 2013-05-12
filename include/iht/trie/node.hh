@@ -85,6 +85,19 @@ namespace iht {
         }
       }
 
+      static String find(uint32_t list, const String & key, const Alc & alc) {
+        if(list == 0) {
+          return String::invalid();
+        }
+
+        const Cons * c = alc.ptr<Cons>(list);
+        if(c->key() == key) {
+          return c->value();
+        } else {
+          return find(c->cdr(), key, alc);
+        }
+      }
+
     private:
       
     };
@@ -133,7 +146,16 @@ namespace iht {
         }
       }
 
-      md_t getList(Alc & alc, uint32_t index) {
+      String find(const String & key, uint32_t hash, uint32_t depth, const Alc & alc) const {
+        uint32_t idx = index(hash);
+        if(depth == 0) {
+          return List::find(getList(alc, idx), key, alc);
+        } else {
+          return getSubNode(alc, idx)->find(key, next(hash), depth-1, alc);
+        }
+      }
+
+      md_t getList(const Alc & alc, uint32_t index) const {
         return nodes_[index];
       }
 
@@ -142,7 +164,7 @@ namespace iht {
       }
 
 
-      Node * getSubNode(Alc & alc, uint32_t index) {
+      Node * getSubNode(const Alc & alc, uint32_t index) const {
         return alc.ptr<Node>(nodes_[index]);
       }
 
@@ -232,6 +254,10 @@ namespace iht {
         // NOTE: 呼び出し元で解放している: release(alc);
         
         return new_root;
+      }
+
+      String find(const String & key, const Alc & alc) const {
+        return alc.ptr<Node>(root_)->find(key, key.hash(), root_depth_, alc);
       }
 
     private:

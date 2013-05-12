@@ -18,19 +18,6 @@ namespace iht {
     typedef uint32_t md_t;
 
     class HashTrieImpl {
-    public:
-      // TODO: HashTrieImplのaliasにする？
-      class View {
-      public:
-        String find(const String & key) const {
-          return String();
-        }
-
-        template <class Callback>
-        void foreach(Callback & callback) const {
-        }
-      };
-
     private:
       struct Header {
         char magic[sizeof(MAGIC)];
@@ -93,9 +80,18 @@ namespace iht {
         }
         RootNode::releaseNode(old, alc_);
       }
+      
+      md_t dupRoot() {
+        for(;;) {
+          md_t root = h_->root;
+          if(alc_.dup(root)) {
+            return root;
+          }
+        }
+      }
 
-      View view() const {
-        return View();
+      void undupRoot(md_t root) {
+        RootNode::releaseNode(root, alc_);
       }
 
       bool isMember(const String & key) const {
@@ -109,6 +105,10 @@ namespace iht {
             return root.ptr()->count();
           }
         }
+      }
+
+      String find(md_t root, const String & key) const {
+        return alc_.ptr<RootNode>(root)->find(key, alc_);
       }
 
     private:

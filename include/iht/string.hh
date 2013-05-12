@@ -26,9 +26,9 @@ namespace iht {
         end_(NULL)
     {
     }
-    
-    operator bool() const { return beg_ != NULL && beg_ < end_; }
-    
+
+    operator bool() const { return beg_ < end_; }
+
     uint32_t size() const { return end_ - beg_; }
     
     const char * data() const { return beg_; }
@@ -45,6 +45,16 @@ namespace iht {
         return false;
       }
       return strncmp(data(), s.data(), size()) == 0;
+    }
+
+    static String invalid() { return String(reinterpret_cast<const char*>(1), 
+                                            reinterpret_cast<const char*>(0)); }
+
+  private:
+    String(const char * beg, const char * end)
+      : beg_(beg),
+        end_(end)
+    {
     }
 
   private:

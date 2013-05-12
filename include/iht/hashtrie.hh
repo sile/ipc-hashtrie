@@ -39,6 +39,7 @@ namespace iht {
       impl_.store(key, value);
     }
 
+    /*
     void view() const {
       // TODO
     }
@@ -53,6 +54,7 @@ namespace iht {
         return true;
       }
     }
+    */
     
     bool isMember(const String & key) const {
       return impl_.isMember(key);
@@ -62,15 +64,42 @@ namespace iht {
       return impl_.size();
     }
 
+    /*
     template <class Callback>
     void foreach(Callback & callback) const {
       trie::HashTrieImpl::View view = impl_.view();
       view.foreach(callback);
     }
+    */
 
+    // XXX:
+    trie::HashTrieImpl & getImpl() { return impl_; }
+    const trie::HashTrieImpl & getImpl() const { return impl_; }
+    
   private:
     ipc::SharedMemory shm_;
     trie::HashTrieImpl impl_;
+  };
+  
+  class View {
+  public:
+    View(HashTrie & trie)
+      : trie_(trie),
+        root_(trie.getImpl().dupRoot())
+    {
+    }
+
+    ~View() {
+      trie_.getImpl().undupRoot(root_);
+    }
+
+    String find(const String & key) const {
+      return trie_.getImpl().find(root_, key);
+    }
+
+  private:
+    HashTrie trie_;
+    trie::md_t root_;
   };
 }
 
