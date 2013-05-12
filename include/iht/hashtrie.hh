@@ -58,7 +58,7 @@ namespace iht {
       return impl_.isMember(key);
     }
 
-    size_t size() const {
+    size_t size() {
       return impl_.size();
     }
 

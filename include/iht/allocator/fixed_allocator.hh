@@ -104,14 +104,27 @@ namespace iht {
         atomic::add(&sb.used_count, 1);
         return md;
       }
+      
+      bool release(uint32_t md) {
+        return release(md, true);
+      }
 
+      // TODO: doc
+      bool undup(uint32_t md) {
+        return base_alc_.undup(md);
+      }
+
+      bool release_no_undup(uint32_t md) {
+        return release(md, false);
+      }
+      
       // allocateメソッドで割り当てたメモリ領域を解放する。(解放に成功した場合は trueを、失敗した場合は false を返す)
       // md(メモリ記述子)が 0 の場合は何も行わない。
-      bool release(uint32_t md) {
+      bool release(uint32_t md, bool need_undup) {
         if(md == 0) {
           return true;
         }
-        if(! base_alc_.undup(md)) {
+        if(need_undup && ! base_alc_.undup(md)) {
           return true; // まだ誰かが参照中
         }
 

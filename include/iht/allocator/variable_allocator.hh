@@ -5,6 +5,9 @@
 #include <cassert>
 #include <inttypes.h>
 
+// XXX:
+#include <iostream>
+
 namespace iht {
   namespace allocator {
     namespace VariableAllocatorAux {
@@ -153,6 +156,8 @@ namespace iht {
       
       // 割当領域の参照カウントを増やす
       bool dup(uint32_t md, uint32_t delta=1) {
+        assert(md != 0);
+
         Descriptor desc = Descriptor::decode(md);
 
         for(;;) {
@@ -173,6 +178,8 @@ namespace iht {
       // 解放可能(参照カウントが0)の割当領域を再利用する。
       // 返り値は、新しいメモリ記述子。
       uint32_t dupNew(uint32_t md) {
+        assert(md != 0);
+
         Descriptor desc = Descriptor::decode(md);
 
         NodeSnapshot snap(nodes_ + desc.index);
@@ -192,6 +199,8 @@ namespace iht {
       // 参照カウントを減らす。カウントが0(= 解放可能)なら true を返す。
       // release() メソッドの中で呼び出されるので、通常はクライアントコードで明示的に呼ばれることはない。
       bool undup(uint32_t md) {
+        assert(md != 0);
+
         Descriptor desc = Descriptor::decode(md);
         
         for(;;) {
@@ -265,6 +274,8 @@ namespace iht {
         }
 
         pred = curr;
+        // XXX: 
+        assert(false);
         return findCandidate(fn, pred, curr, retry);
       }
 

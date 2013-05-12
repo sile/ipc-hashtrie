@@ -8,7 +8,8 @@ SRCS_NO_MAIN=$(shell find src -name "*.cc" | grep -v 'src/bin')
 OBJS_NO_MAIN=$(SRCS_NO_MAIN:%.cc=%.o)
 
 CXX=g++
-CFLAGS=-Wall -O2 -g
+#CFLAGS=-Wall -O2 -g
+CFLAGS=-Wall -g
 LINK=
 INCLUDE=-Iinclude
 
@@ -20,7 +21,7 @@ bin:
 	mkdir -p bin
 
 bin/hashtrie: src/bin/hashtrie.cc $(OBJS)
-	$(CXX) $(CFLAGS) -MMD -MP -o $@ $< $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
+	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 %.o : %.cc
 	$(CXX) $(CFLAGS) -c -MMD -MP -o $@ $< $(LINK) $(INCLUDE)
