@@ -15,23 +15,23 @@ class SyncHashMap {
 
 public:
   SyncHashMap() {
-    int ret = pthread_mutex_init(&mtx_, NULL);
+    int ret = pthread_rwlock_init(&lock_, NULL);
     assert(ret == 0);
   }
 
   ~SyncHashMap() {
-    int ret = pthread_mutex_destroy(&mtx_);
+    int ret = pthread_rwlock_destroy(&lock_);
     assert(ret == 0);
   }
 
   void store(const std::string & key, const std::string & value) {
-    pthread_mutex_lock(&mtx_);
+    pthread_rwlock_wrlock(&lock_);
     impl_[key] = value;
-    pthread_mutex_unlock(&mtx_);
+    pthread_rwlock_unlock(&lock_);
   }
 
   bool find(const std::string & key, std::string & value) {
-    pthread_mutex_lock(&mtx_);
+    pthread_rwlock_rdlock(&lock_);
     hashmap::const_iterator it = impl_.find(key);
     
     bool exists;
@@ -41,39 +41,39 @@ public:
       value = it->second;
       exists =  true;
     }
-    pthread_mutex_unlock(&mtx_);
+    pthread_rwlock_unlock(&lock_);
 
     return exists;
   }
   
   bool isMember(const std::string & key) {
-    pthread_mutex_lock(&mtx_);
+    pthread_rwlock_rdlock(&lock_);
     bool exists = impl_.find(key) != impl_.end();
-    pthread_mutex_unlock(&mtx_);
+    pthread_rwlock_unlock(&lock_);
 
     return exists;
   }
 
   size_t size() { 
-    pthread_mutex_lock(&mtx_);
+    pthread_rwlock_rdlock(&lock_);
     size_t size = impl_.size(); 
-    pthread_mutex_unlock(&mtx_);
+    pthread_rwlock_unlock(&lock_);
     return size;
   }
 
   template <class Callback>
   void foreach(Callback & callback) {
-    pthread_mutex_lock(&mtx_);
+    pthread_rwlock_rdlock(&lock_);
     hashmap::const_iterator it = impl_.begin();
     for(; it != impl_.end(); ++it) {
       callback(it->first, it->second);
     }
-    pthread_mutex_unlock(&mtx_);
+    pthread_rwlock_unlock(&lock_);
   }
   
 private:
   hashmap impl_;
-  pthread_mutex_t mtx_;
+  pthread_rwlock_t lock_;
 };
 
 struct Param {
@@ -188,7 +188,7 @@ void * work(void * arg) {
 
 int main(int argc, char** argv) {
   if(argc != 5) {
-    std::cerr << "Usage: mt-mutex TREHAD_NUM KEY_NUM READ_NUM SUM_NUM" << std::endl;
+    std::cerr << "Usage: mt-rwlock TREHAD_NUM KEY_NUM READ_NUM SUM_NUM" << std::endl;
     return 1;
   }
 

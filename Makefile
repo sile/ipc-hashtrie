@@ -13,7 +13,7 @@ CFLAGS=-Wall -O2 -g
 LINK=-lpthread
 INCLUDE=-Iinclude
 
-all: bin bin/hashtrie bin/hashmap bin/mt-mutex
+all: bin bin/hashtrie bin/hashmap bin/mt-mutex bin/mt-rwlock
 
 -include $(DEPS)
 
@@ -27,6 +27,9 @@ bin/hashmap: src/bin/hashmap.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 bin/mt-mutex: src/bin/mt-mutex.cc $(OBJS)
+	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
+
+bin/mt-rwlock: src/bin/mt-rwlock.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 %.o : %.cc
