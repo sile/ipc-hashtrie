@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   std::tr1::unordered_map<std::string, std::string> map;
 
   std::vector<std::string> keys;
-  gen_keys(keys, 50000);
+  gen_keys(keys, 2000000);
   
   NanoTimer store_time;
   for(unsigned i=0; i < keys.size(); i++) {
@@ -55,10 +55,13 @@ int main(int argc, char** argv) {
 
   NanoTimer find_time;
 
+  int found = 0;
   for(unsigned i=0; i < keys.size(); i++) {
-    map.find(keys[i]);
+    if(map.find(keys[i]) != map.end()) {
+      found++;
+    }
   }
-  std::cout << "find elapsed: " << find_time.elapsed_ms() << " ms" << std::endl;  
+  std::cout << "find elapsed: " << find_time.elapsed_ms() << " ms: " << found << std::endl;  
 
   std::cout << "size: " << map.size() << std::endl;
 

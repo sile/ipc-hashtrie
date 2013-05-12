@@ -50,51 +50,36 @@ void gen_keys(std::vector<std::string> & keys, int num) {
 }
 
 int main(int argc, char** argv) {
-  iht::HashTrie trie(1024*1024*100);
+  iht::HashTrie trie(1024*1024*250);
   if(! trie) {
     std::cerr << "trie initialization failed" << std::endl;
     return 1;
   }
 
-  trie.store("key", "value");
-  trie.store("1", "2");
-  trie.store("a", "b");
-  trie.store("key", "value2");
-
-  for(int i=0; i < 20; i++) {
-    char key[] = "a";
-    key[0] = key[0] + i;
-    trie.store(key, key);
-  }
-
   std::vector<std::string> keys;
-  gen_keys(keys, 50000);
+  gen_keys(keys, 500000);
   
   NanoTimer store_time;
   for(unsigned i=0; i < keys.size(); i++) {
     trie.store(keys[i], keys[i]);
+    // std::cout << "  " << i << ": " << keys[i] << std::endl;
   }
   std::cout << "store elapsed: " << store_time.elapsed_ms() << " ms" << std::endl;
 
   NanoTimer find_time;
 
+  int found = 0;
   iht::View v(trie);
   for(unsigned i=0; i < keys.size(); i++) {
-    v.find(keys[i]);
+    if(v.find(keys[i])) {
+      found++;
+    } else {
+      std::cout << "  " << i << ": " << keys[i] << std::endl;      
+    }
   }
-  std::cout << "find elapsed: " << find_time.elapsed_ms() << " ms" << std::endl;  
+  std::cout << "find elapsed: " << find_time.elapsed_ms() << " ms: " << found << std::endl;  
 
   std::cout << "size: " << trie.size() << std::endl;
-
-  iht::View view(trie);
-  
-  std::cout << "# find: " << std::endl
-            << "  key: " << toStr(view.find("key")) << std::endl
-            << "  key2: " << toStr(view.find("key2")) << std::endl
-            << "  a: " << toStr(view.find("a")) << std::endl
-            << "  1: " << toStr(view.find("1")) << std::endl
-            << "  d: " << toStr(view.find("d")) << std::endl
-            << std::endl;
 
   return 0;
 }

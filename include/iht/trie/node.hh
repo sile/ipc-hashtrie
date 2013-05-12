@@ -10,7 +10,36 @@
 // TODO:
 #include <iostream>
 
+#include <sys/time.h>
+
 namespace iht {
+
+  // XXX:
+class NanoTimer {
+public:
+  NanoTimer() {
+    gettimeofday(&t, NULL);
+  }
+  
+  long elapsed() const {
+    timeval now;
+    gettimeofday(&now, NULL);
+    return ns(now) - ns(t);
+  }
+
+  long elapsed_ms() const {
+    return elapsed() / 1000 / 1000;
+  }
+  
+private:
+  long ns(const timeval& ts) const {
+    return static_cast<long>(static_cast<long long>(ts.tv_sec)*1000*1000*1000 + ts.tv_usec*1000);
+  }
+  
+private:
+  timeval t;
+};
+
   namespace trie {
     class Cons {
       typedef uint32_t md_t;
@@ -63,25 +92,27 @@ namespace iht {
       
     public:
       static md_t insert(md_t list, const String & key, const String & value, bool & new_key, Alc & alc) {
-        if(list == 0) {
+        if(find(list, key, alc)) {
+          new_key = false;
+          return insertImpl(list, key, value, alc);
+        } else {
           new_key = true;
-          // TODO: key が存在するかをチェックして、存在しない場合は先頭に入れるようにした方が、無駄が少なくて済む
-          return Cons::cons(alc, key, value, 0);
+          return Cons::cons(alc, key, value, list);
         }
-        
+      }
+      
+      static md_t insertImpl(md_t list, const String & key, const String & value, Alc & alc) {
         Cons * c = alc.ptr<Cons>(list);
         if(c->key() == key) {
-          new_key = false;
           md_t cdr = c->cdr();
           if(cdr != 0) {
             bool dup_rlt = alc.dup(cdr);
             assert(dup_rlt != false);
           }
-          
           return Cons::cons(alc, key, value, cdr);
         } else {
           // XXX: 毎回 key と value のコピーが走るのは無駄。ポインタにした方が良いかも。
-          return Cons::cons(alc, c->key(), c->value(), insert(c->cdr(), key, value, new_key, alc));
+          return Cons::cons(alc, c->key(), c->value(), insertImpl(c->cdr(), key, value, alc));
         }
       }
 

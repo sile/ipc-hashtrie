@@ -328,6 +328,7 @@ namespace iht {
       }
 
       bool releaseImpl(uint32_t md, int retry_limit, bool fast) {
+        std::cerr << "# [var] release: " << md << std::endl;
         if(md == 0) {
           return true;
         }

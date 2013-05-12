@@ -156,6 +156,7 @@ namespace iht {
 
         atomic::sub(&sb.used_count, 1);
         atomic::add(&sb.free_count, 1);
+
         return true;
       }
 
