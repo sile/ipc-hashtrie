@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <string.h>
+#include <string>
 
 namespace iht {
   const uint32_t GOLDEN_RATIO_PRIME=0x9e370001;
@@ -18,6 +19,12 @@ namespace iht {
     String(const char * str)
       : beg_(str),
         end_(str + strlen(str))
+    {
+    }
+
+    String(const std::string & str)
+      : beg_(str.data()),
+        end_(str.data() + str.size())
     {
     }
 

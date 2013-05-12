@@ -274,8 +274,6 @@ namespace iht {
         }
 
         pred = curr;
-        // XXX: 
-        assert(false);
         return findCandidate(fn, pred, curr, retry);
       }
 

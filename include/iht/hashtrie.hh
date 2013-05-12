@@ -98,7 +98,7 @@ namespace iht {
     }
 
   private:
-    HashTrie trie_;
+    HashTrie & trie_;
     trie::md_t root_;
   };
 }

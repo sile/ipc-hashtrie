@@ -102,6 +102,7 @@ namespace iht {
         for(;;) {
           Ref<RootNode> root(h_->root, alc_);
           if(root) {
+            // TODO: releaseNodeが必要 (undupに成功したなら)
             return root.ptr()->count();
           }
         }
