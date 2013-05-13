@@ -8,8 +8,8 @@ SRCS_NO_MAIN=$(shell find src -name "*.cc" | grep -v 'src/bin')
 OBJS_NO_MAIN=$(SRCS_NO_MAIN:%.cc=%.o)
 
 CXX=g++
-#CFLAGS=-Wall -O2 -g
-CFLAGS=-Wall -g
+CFLAGS=-Wall -O2 -g
+#CFLAGS=-Wall -g
 LINK=-lpthread
 INCLUDE=-Iinclude
 

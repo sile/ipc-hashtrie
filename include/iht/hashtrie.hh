@@ -97,6 +97,18 @@ namespace iht {
       return trie_.getImpl().find(root_, key);
     }
 
+    size_t size() const {
+      return trie_.getImpl().size(root_);
+    }
+
+    // XXX: MT非対応
+    void updateIfNeed() {
+      if(root_ != trie_.getImpl().getRoot()) {
+        trie_.getImpl().undupRoot(root_);
+        root_ = trie_.getImpl().dupRoot();
+      }
+    }
+
   private:
     HashTrie & trie_;
     trie::md_t root_;

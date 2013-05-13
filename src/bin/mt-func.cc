@@ -29,9 +29,11 @@ public:
     pthread_mutex_unlock(&mtx_);
   }
 
-  bool find(const std::string & key, std::string & value) {
-    iht::View v(impl_);
+  bool find(const std::string & key, std::string & value, iht::View & v) {
+    v.updateIfNeed();
     iht::String s = v.find(key);
+    //iht::View v(impl_);
+    //iht::String s = v.find(key);
     if(s) {
       value.assign(s.data(), s.size());
       return true;
@@ -40,9 +42,11 @@ public:
     }
   }
   
-  bool isMember(const std::string & key) {
-    iht::View v(impl_);
+  bool isMember(const std::string & key, iht::View & v) {
+    v.updateIfNeed();
     return v.find(key);
+    //iht::View v(impl_);
+    //return v.find(key);
   }
 
   size_t size() {
@@ -54,6 +58,8 @@ public:
     // TODO:
   }
   
+  iht::HashTrie & getTrie() { return impl_; }
+  
 private:
   iht::HashTrie impl_;
   pthread_mutex_t mtx_;
@@ -64,6 +70,7 @@ struct Param {
   int key_num;
   int read_num;
   int sum_num;
+  bool write_first;
 
   SyncHashMap map;
 };
@@ -138,6 +145,8 @@ void * work(void * arg) {
   const int beg_i = keys.size() * static_cast<double>(p.id) / p.param->thread_num;
   const int end_i = keys.size() * static_cast<double>(p.id+1) / p.param->thread_num;
 
+  iht::View v(map.getTrie());
+  
   Result * r = new Result;
 
   SumCallback fn;
@@ -148,14 +157,16 @@ void * work(void * arg) {
     
     switch(op) {
     case OP_READ:
-      if(map.isMember(key)) {
+      if(map.isMember(key, v)) {
         r->op_read++;
       }
       break;
       
     case OP_WRITE:
-      map.store(key, key);
-      r->op_write++;
+      if(! p.param->write_first) {
+        map.store(key, key);
+        r->op_write++;
+      }
       break;
 
     case OP_SUM:
@@ -166,12 +177,13 @@ void * work(void * arg) {
     }
   }
 
+  std::cerr << "# " << map.size() << ", " << v.size() << ", " << r->op_read << std::endl;
   return r;
 }
 
 int main(int argc, char** argv) {
-  if(argc != 5) {
-    std::cerr << "Usage: mt-rwlock TREHAD_NUM KEY_NUM READ_NUM SUM_NUM" << std::endl;
+  if(argc != 6) {
+    std::cerr << "Usage: mt-mutex TREHAD_NUM KEY_NUM READ_NUM SUM_NUM WRITE_FIRST" << std::endl;
     return 1;
   }
 
@@ -180,12 +192,14 @@ int main(int argc, char** argv) {
   param.key_num = atoi(argv[2]);
   param.read_num = atoi(argv[3]);
   param.sum_num = atoi(argv[4]);
+  param.write_first = atoi(argv[5]) == 1;
 
   std::cout << "[param]" << std::endl
             << "  threads : " << param.thread_num << std::endl
             << "  keys    : " << param.key_num << std::endl
             << "  read_num: " << param.read_num << std::endl
             << "  sum_num : " << param.sum_num << std::endl
+            << "  Wfirst  : " << param.write_first << std::endl
             << std::endl;
   
   std::vector<std::pair<OP, std::string> > keys;
@@ -193,6 +207,14 @@ int main(int argc, char** argv) {
 
   std::vector<pthread_t> threads(param.thread_num);
   std::vector<ThreadParam> tparams(param.thread_num);
+
+  if(param.write_first) {
+    for(size_t i=0; i < keys.size(); i++) {
+      if(keys[i].first == OP_WRITE) {
+        param.map.store(keys[i].second, keys[i].second);
+      }
+    }
+  }
 
   NanoTimer time;
   for(int i=0; i < param.thread_num; i++) {

@@ -81,6 +81,7 @@ struct Param {
   int key_num;
   int read_num;
   int sum_num;
+  bool write_first;
 
   SyncHashMap map;
 };
@@ -171,8 +172,10 @@ void * work(void * arg) {
       break;
       
     case OP_WRITE:
-      map.store(key, key);
-      r->op_write++;
+      if(! p.param->write_first) {
+        map.store(key, key);
+        r->op_write++;
+      }
       break;
 
     case OP_SUM:
@@ -182,13 +185,13 @@ void * work(void * arg) {
       break;
     }
   }
-
+  std::cerr << "# " << map.size() << ", " << r->op_read << std::endl;
   return r;
 }
 
 int main(int argc, char** argv) {
-  if(argc != 5) {
-    std::cerr << "Usage: mt-mutex TREHAD_NUM KEY_NUM READ_NUM SUM_NUM" << std::endl;
+  if(argc != 6) {
+    std::cerr << "Usage: mt-mutex TREHAD_NUM KEY_NUM READ_NUM SUM_NUM WRITE_FIRST" << std::endl;
     return 1;
   }
 
@@ -197,12 +200,14 @@ int main(int argc, char** argv) {
   param.key_num = atoi(argv[2]);
   param.read_num = atoi(argv[3]);
   param.sum_num = atoi(argv[4]);
-
+  param.write_first = atoi(argv[5]) == 1;
+  
   std::cout << "[param]" << std::endl
             << "  threads : " << param.thread_num << std::endl
             << "  keys    : " << param.key_num << std::endl
             << "  read_num: " << param.read_num << std::endl
             << "  sum_num : " << param.sum_num << std::endl
+            << "  Wfirst  : " << param.write_first << std::endl
             << std::endl;
   
   std::vector<std::pair<OP, std::string> > keys;
@@ -210,6 +215,14 @@ int main(int argc, char** argv) {
 
   std::vector<pthread_t> threads(param.thread_num);
   std::vector<ThreadParam> tparams(param.thread_num);
+
+  if(param.write_first) {
+    for(size_t i=0; i < keys.size(); i++) {
+      if(keys[i].first == OP_WRITE) {
+        param.map.store(keys[i].second, keys[i].second);
+      }
+    }
+  }
 
   NanoTimer time;
   for(int i=0; i < param.thread_num; i++) {

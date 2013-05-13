@@ -246,6 +246,7 @@ private:
 
         for(uint32_t i=0; i < 16; i++) {
           if(i != index && nodes_[i]) {
+            // NOTE: 以下の行が結構ボトルネックになっている
             bool dup_rlt = alc.dup(nodes_[i]);
             assert(dup_rlt);
           }
@@ -277,8 +278,7 @@ private:
     public:
       RootNode(allocator::FixedAllocator & alc)
         : count_(0),
-          // TODO: next_resize_trigger_(16 * 4),
-          next_resize_trigger_(16),
+          next_resize_trigger_(16 * 4),
           root_depth_(0),
           root_(alc.allocate(sizeof(Node)))
       {
@@ -305,6 +305,7 @@ private:
 
       static void releaseNode(md_t md, Alc & alc) {
         if(alc.undup(md)) {
+          // NOTE: 以下の行をコメントアウトするとMT環境でコアダンプを吐かなくなる
           alc.ptr<RootNode>(md)->release(alc);
           alc.release_no_undup(md);
         }

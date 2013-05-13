@@ -94,8 +94,16 @@ namespace iht {
         RootNode::releaseNode(root, alc_);
       }
 
+      // XXX:
+      //md_t getRoot() const { return h_->root; }
+      md_t getRoot() const { return atomic::fetch(&h_->root); }
+
       bool isMember(const String & key) const {
         return false;
+      }
+
+      size_t size(md_t root) const {
+        return alc_.ptr<RootNode>(root)->count();
       }
 
       size_t size() {
