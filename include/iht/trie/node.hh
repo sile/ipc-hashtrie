@@ -91,6 +91,15 @@ private:
       typedef allocator::FixedAllocator Alc;
       
     public:
+      template <class Callback>
+      static void foreach(md_t list, Callback & callback, const Alc & alc) {
+        if(list != 0) {
+          Cons * c = alc.ptr<Cons>(list);
+          callback(c->key(), c->value());
+          foreach(c->cdr(), callback, alc);
+        }
+      }
+
       static md_t insert(md_t list, const String & key, const String & value, bool & new_key, Alc & alc) {
         if(find(list, key, alc)) {
           new_key = false;
@@ -177,6 +186,23 @@ private:
           return List::find(getList(alc, idx), key, alc);
         } else {
           return getSubNode(alc, idx)->find(key, next(hash), depth-1, alc);
+        }
+      }
+
+      template <class Callback>
+      void foreach(Callback & callback, uint32_t depth, const Alc & alc) {
+        if(depth == 0) {
+          for(uint32_t i=0; i < 16; i++) {
+            if(nodes_[i]) {
+              List::foreach(getList(alc, i), callback, alc);
+            }
+          }
+        } else {
+          for(uint32_t i=0; i < 16; i++) {
+            if(nodes_[i]) {
+              getSubNode(alc, i)->foreach(callback, depth-1, alc);
+            }
+          }
         }
       }
 
@@ -344,6 +370,18 @@ private:
         
         return new_root;
       }
+
+      template <class Callback>
+      static void foreach(md_t root, Callback & callback, const Alc & alc) {
+        RootNode * node = alc.ptr<RootNode>(root);
+        node->foreach(callback, alc);
+      }
+
+    private:
+      template <class Callback>
+      void foreach(Callback & callback, const Alc & alc) {
+        alc.ptr<Node>(root_)->foreach(callback, root_depth_, alc);
+      }      
       
     private:
       md_t store(const String & key, const String & value, Alc & alc) {

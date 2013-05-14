@@ -8,21 +8,21 @@
 
 typedef std::vector<std::string> KeyList;
 
-enum MAP_TYPE {
-  MAP_TYPE_HASH,
-  MAP_TYPE_TRIE
+enum MAPTYPE {
+  MAPTYPE_HASH,
+  MAPTYPE_TRIE
 };
 
 struct Param {
   Param(char ** argv)
-    : map_type(strcmp(argv[1], "hash") == 0 ? MAP_TYPE_HASH : MAP_TYPE_TRIE),
+    : map_type(strcmp(argv[1], "hash") == 0 ? MAPTYPE_HASH : MAPTYPE_TRIE),
       write_op_num(atoi(argv[2])),
       read_op_num(atoi(argv[3])),
       sum_op_num(atoi(argv[4]))
   {
   }
   
-  const MAP_TYPE map_type;
+  const MAPTYPE map_type;
   const unsigned write_op_num;
   const unsigned read_op_num;
   const unsigned sum_op_num;
@@ -45,7 +45,7 @@ void gen_input_data(KeyList & write_keys, KeyList & read_keys, const Param & par
 
 int main(int argc, char ** argv) {
   if(argc != 5) {
-    std::cerr << "Usage: st-bench MAP_TYPE(hash|trie) WRITE_NUM READ_NUM SUM_NUM" << std::endl;
+    std::cerr << "Usage: st-bench MAPTYPE(hash|trie) WRITE_NUM READ_NUM SUM_NUM" << std::endl;
     return 1;
   }
   
@@ -71,8 +71,8 @@ int main(int argc, char ** argv) {
 
   Map * map = NULL;
   switch(param.map_type) {
-  case MAP_TYPE_HASH: map = new HashMap(); break;
-  case MAP_TYPE_TRIE: map = new TrieMap(); break;
+  case MAPTYPE_HASH: map = new HashMap(); break;
+  case MAPTYPE_TRIE: map = new TrieMap(); break;
   }
 
   double write_time;

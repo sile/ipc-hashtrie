@@ -64,13 +64,10 @@ namespace iht {
       return impl_.size();
     }
 
-    /*
     template <class Callback>
     void foreach(Callback & callback) const {
-      trie::HashTrieImpl::View view = impl_.view();
-      view.foreach(callback);
+      impl_.foreach(callback);
     }
-    */
 
     // XXX:
     trie::HashTrieImpl & getImpl() { return impl_; }
@@ -99,6 +96,11 @@ namespace iht {
 
     size_t size() const {
       return trie_.getImpl().size(root_);
+    }
+
+    template <class Callback>
+    void foreach(Callback & callback) {
+      trie_.getImpl().foreach(root_, callback);
     }
 
     // XXX: MT非対応

@@ -154,8 +154,20 @@ public:
   virtual size_t size() {
     return map_.size();
   }
+
+  struct Callback {
+    Callback() : sum(0) {}
+    void operator()(const iht::String & key, const iht::String & val) {
+      sum += val.size();
+    }
+    unsigned sum;
+  };
+  
   virtual unsigned totalValueLength() {
-    return 0; // TODO:
+    v_.updateIfNeed();
+    Callback callback;
+    v_.foreach(callback);
+    return callback.sum;
   }
   
 private:

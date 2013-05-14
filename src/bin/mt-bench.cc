@@ -16,10 +16,10 @@ enum OP {
   OP_SUM
 };
 
-enum MAP_TYPE {
-  MAP_TYPE_MUTEX,
-  MAP_TYPE_RWLOCK,
-  MAP_TYPE_PERSISTENT
+enum MAPTYPE {
+  MAPTYPE_MUTEX,
+  MAPTYPE_RWLOCK,
+  MAPTYPE_PERSISTENT
 };
 
 typedef std::vector<std::string> KeyList;
@@ -27,8 +27,8 @@ typedef std::vector<OP> OpList;
 
 struct Param {
   Param(char ** argv)
-    : map_type(strcmp(argv[1], "mutex") == 0 ? MAP_TYPE_MUTEX : 
-               strcmp(argv[1], "rwlock") == 0 ? MAP_TYPE_RWLOCK : MAP_TYPE_PERSISTENT),
+    : map_type(strcmp(argv[1], "mutex") == 0 ? MAPTYPE_MUTEX : 
+               strcmp(argv[1], "rwlock") == 0 ? MAPTYPE_RWLOCK : MAPTYPE_PERSISTENT),
       thread_num(atoi(argv[2])),
       init_entry_num(atoi(argv[3])),
       write_op_num(atoi(argv[4])),
@@ -37,7 +37,7 @@ struct Param {
   {
   }
   
-  const MAP_TYPE map_type;
+  const MAPTYPE map_type;
   const unsigned thread_num;
   const unsigned init_entry_num;
   const unsigned write_op_num;
@@ -145,7 +145,7 @@ void * do_bench(void * data) {
 
 int main(int argc, char ** argv) {
   if(argc != 7) {
-    std::cerr << "Usage: mt-bench MAP_TYPE(mutex|rwlock|persistent) THREAD_NUM INIT_ENTRY_NUM WRITE_OP_NUM READ_OP_NUM SUM_OP_NUM" << std::endl;
+    std::cerr << "Usage: mt-bench MAPTYPE(mutex|rwlock|persistent) THREAD_NUM INIT_ENTRY_NUM WRITE_OP_NUM READ_OP_NUM SUM_OP_NUM" << std::endl;
     return 1;
   }
   
@@ -166,9 +166,9 @@ int main(int argc, char ** argv) {
 
   Map * map = NULL;
   switch (param.map_type) {
-  case MAP_TYPE_MUTEX:      map = new MutexMap(); break;
-  case MAP_TYPE_RWLOCK:     map = new RWLockMap(); break;
-  case MAP_TYPE_PERSISTENT: map = new PersistentMap(); break;
+  case MAPTYPE_MUTEX:      map = new MutexMap(); break;
+  case MAPTYPE_RWLOCK:     map = new RWLockMap(); break;
+  case MAPTYPE_PERSISTENT: map = new PersistentMap(); break;
   }
 
   {

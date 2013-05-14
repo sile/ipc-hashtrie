@@ -120,6 +120,22 @@ namespace iht {
         return alc_.ptr<RootNode>(root)->find(key, alc_);
       }
 
+      template <class Callback>
+      void foreach(Callback & callback) {
+        for(;;) {
+          Ref<RootNode> root(h_->root, alc_);
+          if(! root) {
+            continue;
+          }
+          foreach(root, callback, alc_);
+        }
+      }
+      
+      template <class Callback>
+      void foreach(md_t root, Callback & callback) {
+        RootNode::foreach(root, callback, alc_);
+      }
+
     private:
       const size_t shm_size_;
       Header * h_;
