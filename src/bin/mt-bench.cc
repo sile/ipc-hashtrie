@@ -166,7 +166,7 @@ int main(int argc, char ** argv) {
   Map * map = NULL;
   switch (param.map_type) {
   case MAP_TYPE_MUTEX:      map = new MutexMap(); break;
-  case MAP_TYPE_RWLOCK:     map = NULL; break;
+  case MAP_TYPE_RWLOCK:     map = new RWLockMap(); break;
   case MAP_TYPE_PERSISTENT: map = NULL; break;
   }
 

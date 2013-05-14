@@ -86,5 +86,71 @@ private:
   pthread_mutex_t mtx_;
 };
 
+class RWLockMap : public Map {
+public:
+  RWLockMap() {
+    int ret = pthread_rwlock_init(&lock_, NULL);
+    assert(ret == 0);
+  }
+
+  ~RWLockMap() {
+    int ret = pthread_rwlock_destroy(&lock_);
+    assert(ret == 0);
+  }
+
+  virtual void store(const std::string & key, const std::string & value) {
+    pthread_rwlock_wrlock(&lock_);
+    impl_[key] = value;
+    pthread_rwlock_unlock(&lock_);
+  }
+
+  virtual bool find(const std::string & key, std::string & value) {
+    pthread_rwlock_rdlock(&lock_);
+    hashmap_t::const_iterator it = impl_.find(key);
+    
+    bool exists;
+    if(it == impl_.end()) {
+      exists = false;
+    } else {
+      value = it->second;
+      exists =  true;
+    }
+    pthread_rwlock_unlock(&lock_);
+
+    return exists;
+  }
+  
+  virtual bool member(const std::string & key) {
+    pthread_rwlock_rdlock(&lock_);
+    bool exists = impl_.find(key) != impl_.end();
+    pthread_rwlock_unlock(&lock_);
+
+    return exists;
+  }
+
+  virtual size_t size() { 
+    pthread_rwlock_rdlock(&lock_);
+    size_t size = impl_.size(); 
+    pthread_rwlock_unlock(&lock_);
+    return size;
+  }
+
+  virtual unsigned totalValueLength() {
+    unsigned total = 0;
+
+    pthread_rwlock_rdlock(&lock_);
+    hashmap_t::const_iterator it = impl_.begin();
+    for(; it != impl_.end(); ++it) {
+      total += it->second.size();
+    }
+    pthread_rwlock_unlock(&lock_);
+    
+    return total;
+  }
+  
+private:
+  hashmap_t impl_;
+  pthread_rwlock_t lock_;
+};
 
 #endif
