@@ -114,6 +114,7 @@ void * do_bench(void * data) {
   KeyList & keys = *td.keys;
   OpList  & ops  = *td.ops;
   Result & rlt = td.rlt;
+  View * view = map.createView();
 
   const int beg_i = keys.size() * static_cast<double>(td.thread_index)   / td.param->thread_num;
   const int end_i = keys.size() * static_cast<double>(td.thread_index+1) / td.param->thread_num;
@@ -124,7 +125,7 @@ void * do_bench(void * data) {
     
     switch(op) {
     case OP_READ:
-      if(map.member(key)) {
+      if(view->member(key)) {
         rlt.found_count++;
       }
       break;
@@ -134,11 +135,12 @@ void * do_bench(void * data) {
       break;
 
     case OP_SUM:
-      rlt.sum_acc += map.totalValueLength();
+      rlt.sum_acc += view->totalValueLength();
       break;
     }
   }
   
+  delete view;
   return &rlt;
 }
 
@@ -167,7 +169,7 @@ int main(int argc, char ** argv) {
   switch (param.map_type) {
   case MAP_TYPE_MUTEX:      map = new MutexMap(); break;
   case MAP_TYPE_RWLOCK:     map = new RWLockMap(); break;
-  case MAP_TYPE_PERSISTENT: map = NULL; break;
+  case MAP_TYPE_PERSISTENT: map = new PersistentMap(); break;
   }
 
   {

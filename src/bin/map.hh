@@ -5,12 +5,27 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <assert.h>
+#include <iht/hashtrie.hh>
+
+class View;
 
 class Map {
 public:
   virtual ~Map() {}
-
+  
   virtual void store(const std::string & key, const std::string & value) = 0;
+  virtual bool find(const std::string & key, std::string & value) = 0;
+  virtual bool member(const std::string & key) = 0;
+  virtual size_t size() = 0;
+  virtual unsigned totalValueLength() = 0;
+  
+  virtual View * createView() = 0;
+};
+
+class View {
+public:
+  virtual ~View() {}
+
   virtual bool find(const std::string & key, std::string & value) = 0;
   virtual bool member(const std::string & key) = 0;
   virtual size_t size() = 0;
@@ -81,10 +96,29 @@ public:
     return total;
   }
   
+  virtual View * createView();
+  
 private:
   hashmap_t impl_;
   pthread_mutex_t mtx_;
 };
+
+class MutexView : public View {
+public:
+  MutexView(MutexMap & map) : map_(map) {}
+  
+  virtual bool find(const std::string & key, std::string & value) { return map_.find(key, value); }
+  virtual bool member(const std::string & key) { return map_.member(key); }
+  virtual size_t size() { return map_.size(); }
+  virtual unsigned totalValueLength() { return map_.totalValueLength(); }
+  
+private:
+  MutexMap & map_;
+};
+
+View * MutexMap::createView() {
+  return new MutexView(*this);
+}
 
 class RWLockMap : public Map {
 public:
@@ -148,9 +182,111 @@ public:
     return total;
   }
   
+  virtual View * createView();
+  
 private:
   hashmap_t impl_;
   pthread_rwlock_t lock_;
 };
+
+class RWLockView : public View {
+public:
+  RWLockView(RWLockMap & map) : map_(map) {}
+  
+  virtual bool find(const std::string & key, std::string & value) { return map_.find(key, value); }
+  virtual bool member(const std::string & key) { return map_.member(key); }
+  virtual size_t size() { return map_.size(); }
+  virtual unsigned totalValueLength() { return map_.totalValueLength(); }
+  
+private:
+  RWLockMap & map_;
+};
+
+View * RWLockMap::createView() {
+  return new RWLockView(*this);
+}
+
+class PersistentMap : public Map {
+public:
+  PersistentMap() : impl_(1024*1024*250) {
+    int ret = pthread_mutex_init(&mtx_, NULL);
+    assert(ret == 0);
+  }
+
+  ~PersistentMap() {
+    int ret = pthread_mutex_destroy(&mtx_);
+    assert(ret == 0);
+  }
+  
+  virtual void store(const std::string & key, const std::string & value) {
+    pthread_mutex_lock(&mtx_);
+    impl_.store(key, value);
+    pthread_mutex_unlock(&mtx_);
+  }
+
+  virtual bool find(const std::string & key, std::string & value) {
+    iht::View v(impl_);
+    iht::String s = v.find(key);
+    if(s) {
+      value.assign(s.data(), s.size());
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  virtual bool member(const std::string & key) {
+    iht::View v(impl_);
+    return v.find(key);
+  }
+  
+  virtual size_t size() { return impl_.size(); }
+  
+  virtual unsigned totalValueLength() { return 0; /* TODO */ }
+
+  virtual View * createView();
+  
+public:
+  iht::HashTrie & getTrie() { return impl_; }
+  
+private:
+  iht::HashTrie impl_;
+  pthread_mutex_t mtx_;
+};
+
+class PersistentView : public View {
+public:
+  PersistentView(PersistentMap & map) : map_(map), v_(map.getTrie()) {}
+  
+  virtual bool find(const std::string & key, std::string & value) {
+    v_.updateIfNeed();
+    iht::String s = v_.find(key);
+    if(s) {
+      value.assign(s.data(), s.size());
+      return true;
+    } else {
+      return false;
+    }
+  }
+  virtual bool member(const std::string & key) {
+    v_.updateIfNeed();
+    return v_.find(key);
+  }
+  virtual size_t size() {
+    return map_.size();
+  }
+  virtual unsigned totalValueLength() {
+    return 0; // TODO:
+  }
+  
+private:
+  PersistentMap & map_;
+  iht::View v_;
+};
+
+View * PersistentMap::createView() {
+  return new PersistentView(*this);
+}
+
 
 #endif
