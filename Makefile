@@ -13,17 +13,14 @@ CFLAGS=-Wall -O2 -g
 LINK=-lpthread
 INCLUDE=-Iinclude
 
-all: bin bin/hashtrie bin/hashmap bin/mt-bench
+all: bin bin/st-bench bin/mt-bench
 
 -include $(DEPS)
 
 bin:
 	mkdir -p bin
 
-bin/hashtrie: src/bin/hashtrie.cc $(OBJS)
-	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
-
-bin/hashmap: src/bin/hashmap.cc $(OBJS)
+bin/st-bench: src/bin/st-bench.cc $(OBJS)
 	$(CXX) $(CFLAGS) -MMD -MP -o $@ $(<:%.cc=%.o) $(OBJS_NO_MAIN) $(LINK) $(INCLUDE)
 
 bin/mt-bench: src/bin/mt-bench.cc $(OBJS)

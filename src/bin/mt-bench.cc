@@ -1,6 +1,5 @@
 #include <iostream>
 #include <pthread.h>
-#include <tr1/unordered_map>
 #include <string>
 #include <vector>
 #include <sys/types.h>
@@ -9,7 +8,7 @@
 #include <string.h>
 #include <assert.h>
 #include "nano_timer.hh"
-#include "map.hh"
+#include "sync_map.hh"
 
 enum OP {
   OP_WRITE,
