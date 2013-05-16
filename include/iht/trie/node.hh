@@ -273,8 +273,8 @@ private:
         for(uint32_t i=0; i < 16; i++) {
           if(i != index && nodes_[i]) {
             // NOTE: 以下の行が結構ボトルネックになっている
-            bool dup_rlt = alc.dup(nodes_[i]);
-            assert(dup_rlt);
+            //bool dup_rlt = alc.dup(nodes_[i]);
+            //assert(dup_rlt);
           }
         }
         
@@ -332,7 +332,7 @@ private:
       static void releaseNode(md_t md, Alc & alc) {
         if(alc.undup(md)) {
           // NOTE: 以下の行をコメントアウトするとMT環境でコアダンプを吐かなくなる
-          alc.ptr<RootNode>(md)->release(alc);
+          //alc.ptr<RootNode>(md)->release(alc);
           alc.release_no_undup(md);
         }
       }

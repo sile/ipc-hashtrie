@@ -101,7 +101,7 @@ void gen_input_data(KeyList & init_keys, KeyList & keys, OpList & ops, const Par
   }
 
   for(unsigned i=0; i < keys.size(); i++) {
-    unsigned idx = rand() / keys.size();
+    unsigned idx = rand() % keys.size();
     std::swap(keys[i], keys[idx]);
     std::swap(ops[i], ops[idx]);
   }
