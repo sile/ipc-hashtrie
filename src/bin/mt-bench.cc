@@ -107,7 +107,12 @@ void gen_input_data(KeyList & init_keys, KeyList & keys, OpList & ops, const Par
   }
 }
 
+volatile int g_latch = 0;
+
 void * do_bench(void * data) {
+  __sync_sub_and_fetch(&g_latch, 1);
+  while(g_latch > 0);
+
   ThreadData & td = *static_cast<ThreadData*>(data);
   Map     & map  = *td.map;
   KeyList & keys = *td.keys;
@@ -192,6 +197,7 @@ int main(int argc, char ** argv) {
     std::vector<pthread_t> threads(param.thread_num);
     std::vector<ThreadData> tdatas(param.thread_num);
 
+    g_latch = param.thread_num;
     for(unsigned i=0; i < param.thread_num; i++) {
       tdatas[i] = ThreadData(i, &param, map, &keys, &ops);
       int ret = pthread_create(&threads[i], NULL, do_bench, &tdatas[i]);
